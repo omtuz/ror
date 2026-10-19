@@ -4432,6 +4432,7 @@ Write-Host '  Press Enter to start the live monitor...' -ForegroundColor Yellow
 Read-Host | Out-Null
 
 
+
 Write-StepHeader 'Step 3 of 3 - Live Monitor'
 Write-Host ''
 Write-Host '  Keep this window open for the whole match and show it again afterwards.' -ForegroundColor Yellow
@@ -4449,22 +4450,62 @@ Write-Host ' context' -ForegroundColor DarkGray
 Write-Rule
 Write-Host ''
 
+# Initialize monitor state
+$monitoringStart = Get-Date
+$statusLineCounter = 0
+
+if ($null -eq $script:LastRobloxBuildAnnounced) {
+    $script:LastRobloxBuildAnnounced = $null
+}
+
+# Announce monitor startup
+Write-MonitorAlert `
+    -Message 'RoR v1.3.0 monitor started (Step 1: 8 FAIL, 7 WARN sections)' `
+    -LogFile $logFile `
+    -Level INFO
+
 try {
     while ($true) {
-        # TODO: Restore your existing monitoring checks here.
-        # Do not leave this placeholder as if it performs monitoring.
+
+        # Detect and announce Roblox client
+        $rTarget = Get-Process -Name 'RobloxPlayerBeta' -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+
+        if ($rTarget) {
+            try {
+                $rbxToken = "$($rTarget.Id)|$($rTarget.StartTime.Ticks)"
+
+                if ($script:LastRobloxBuildAnnounced -ne $rbxToken) {
+                    $script:LastRobloxBuildAnnounced = $rbxToken
+                    $v = Get-RobloxVersionInfo
+
+                    Write-MonitorAlert `
+                        -Message "Roblox client running: $($v.VersionHash) (Ver: $($v.FileVersion), PID $($rTarget.Id))" `
+                        -LogFile $logFile `
+                        -Level INFO
+                }
+            }
+            catch {
+                # The Roblox process may exit while being inspected.
+            }
+        }
+        else {
+            $script:LastRobloxBuildAnnounced = $null
+        }
+
+        # RESTORE YOUR EXISTING MONITORING CHECKS HERE.
+        # The Roblox detection above does not replace them.
 
         $statusLineCounter++
 
         if ($statusLineCounter -ge 2) {
             $statusLineCounter = 0
+
             if ($monitoringStart -isnot [datetime]) {
-    $monitoringStart = Get-Date
-}
-if ($monitoringStart -isnot [datetime]) {
-    $monitoringStart = Get-Date
-}
-Write-MonitorStatusLine -Since $monitoringStart
+                $monitoringStart = Get-Date
+            }
+
+            Write-MonitorStatusLine -Since $monitoringStart
         }
 
         Start-Sleep -Seconds 1
@@ -4474,14 +4515,11 @@ finally {
     Clear-MonitorStatusLine
 
     if ($monitoringStart -is [datetime]) {
-    if ($monitoringStart -is [datetime]) {
-    $elapsed = (Get-Date) - $monitoringStart
-} else {
-    $elapsed = [timespan]::Zero
-}
-} else {
-    $elapsed = [timespan]::Zero
-}
+        $elapsed = (Get-Date) - $monitoringStart
+    }
+    else {
+        $elapsed = [timespan]::Zero
+    }
 
     Write-MonitorAlert `
         -Message ("RoR monitor stopped after {0:hh\:mm\:ss} ({1} fail, {2} warn, {3} info)" -f `
@@ -4495,4 +4533,3 @@ finally {
     Get-EventSubscriber -SourceIdentifier USBChange -ErrorAction SilentlyContinue |
         Unregister-Event -Force -ErrorAction SilentlyContinue
 }
-
