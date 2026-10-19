@@ -4458,7 +4458,13 @@ try {
 
         if ($statusLineCounter -ge 2) {
             $statusLineCounter = 0
-            Write-MonitorStatusLine -Since $monitoringStart
+            if ($monitoringStart -isnot [datetime]) {
+    $monitoringStart = Get-Date
+}
+if ($monitoringStart -isnot [datetime]) {
+    $monitoringStart = Get-Date
+}
+Write-MonitorStatusLine -Since $monitoringStart
         }
 
         Start-Sleep -Seconds 1
@@ -4468,7 +4474,11 @@ finally {
     Clear-MonitorStatusLine
 
     if ($monitoringStart -is [datetime]) {
+    if ($monitoringStart -is [datetime]) {
     $elapsed = (Get-Date) - $monitoringStart
+} else {
+    $elapsed = [timespan]::Zero
+}
 } else {
     $elapsed = [timespan]::Zero
 }
