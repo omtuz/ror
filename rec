@@ -4447,7 +4447,7 @@ Write-Host ''
         $statusLineCounter = 0
         Write-MonitorStatusLine -Since $monitoringStart
     }
-}
+
 } finally {
     Clear-MonitorStatusLine
     $elapsed = (Get-Date) - $monitoringStart
