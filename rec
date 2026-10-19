@@ -4403,13 +4403,17 @@ Write-Host ''
 Write-Host "  Press Enter to continue to Step 2..." -ForegroundColor Yellow
 Read-Host | Out-Null
 
-Write-StepHeader 'Step 2 of 3  -  Process Explorer'
+
+Write-StepHeader 'Step 2 of 3 - Process Explorer'
 Write-Host ''
 Write-Host '  Launching Process Explorer. Show the process list on the recording, then' -ForegroundColor Gray
 Write-Host '  CLOSE Process Explorer (File > Exit) to continue - this window waits for it.' -ForegroundColor Yellow
 Write-Host ''
+
 $procexpDir = Join-Path $env:TEMP ('RoR_' + [guid]::NewGuid().ToString('N'))
-if (Start-RoRExternalTool -Name 'Process Explorer' `
+
+if (Start-RoRExternalTool `
+        -Name 'Process Explorer' `
         -Url 'https://download.sysinternals.com/files/ProcessExplorer.zip' `
         -ZipPath "$procexpDir.zip" `
         -DestDir $procexpDir `
@@ -4424,14 +4428,15 @@ if (Start-RoRExternalTool -Name 'Process Explorer' `
 }
 
 Write-Host ''
-Write-Host "  Press Enter to start the live monitor..." -ForegroundColor Yellow
+Write-Host '  Press Enter to start the live monitor...' -ForegroundColor Yellow
 Read-Host | Out-Null
 
-Write-StepHeader 'Step 3 of 3  -  Live Monitor'
+Write-StepHeader 'Step 3 of 3 - Live Monitor'
 Write-Host ''
 Write-Host '  Keep this window open for the whole match and show it again afterwards.' -ForegroundColor Yellow
 Write-Host '  Quiet is normal: only suspicious activity is logged. Press Ctrl+C to stop.' -ForegroundColor DarkGray
 Write-Host ''
+
 Write-Host '  Tags: ' -NoNewline -ForegroundColor DarkGray
 Write-Host '[FAIL]' -NoNewline -ForegroundColor Red
 Write-Host ' serious   ' -NoNewline -ForegroundColor DarkGray
@@ -4439,19 +4444,40 @@ Write-Host '[WARN]' -NoNewline -ForegroundColor Yellow
 Write-Host ' needs a look   ' -NoNewline -ForegroundColor DarkGray
 Write-Host '[INFO]' -NoNewline -ForegroundColor DarkGray
 Write-Host ' context' -ForegroundColor DarkGray
+
 Write-Rule
 Write-Host ''
 
-    $statusLineCounter++
-    if ($statusLineCounter -ge 2) {
-        $statusLineCounter = 0
-        Write-MonitorStatusLine -Since $monitoringStart
-    }
+try {
+    # Insert your existing live-monitor loop here.
+    # Keep the monitoring logic inside this try block.
 
-finally 
+    while ($true) {
+        # Your existing monitoring checks go here.
+
+        $statusLineCounter++
+        if ($statusLineCounter -ge 2) {
+            $statusLineCounter = 0
+            Write-MonitorStatusLine -Since $monitoringStart
+        }
+
+        # Retain your existing monitoring interval here.
+    }
+}
+finally {
     Clear-MonitorStatusLine
+
     $elapsed = (Get-Date) - $monitoringStart
-    Write-MonitorAlert -Message ("RoR monitor stopped after {0:hh\:mm\:ss} ({1} fail, {2} warn, {3} info)" -f $elapsed, $script:MonitorAlertCounts.FAIL, $script:MonitorAlertCounts.WARN, $script:MonitorAlertCounts.INFO) -LogFile $logFile -Level INFO
+
+    Write-MonitorAlert `
+        -Message ("RoR monitor stopped after {0:hh\:mm\:ss} ({1} fail, {2} warn, {3} info)" -f `
+            $elapsed,
+            $script:MonitorAlertCounts.FAIL,
+            $script:MonitorAlertCounts.WARN,
+            $script:MonitorAlertCounts.INFO) `
+        -LogFile $logFile `
+        -Level INFO
+
     Get-EventSubscriber -SourceIdentifier USBChange -ErrorAction SilentlyContinue |
         Unregister-Event -Force -ErrorAction SilentlyContinue
 }
