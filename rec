@@ -4448,7 +4448,7 @@ Write-Host ''
         Write-MonitorStatusLine -Since $monitoringStart
     }
 
-} finally {
+finally {
     Clear-MonitorStatusLine
     $elapsed = (Get-Date) - $monitoringStart
     Write-MonitorAlert -Message ("RoR monitor stopped after {0:hh\:mm\:ss} ({1} fail, {2} warn, {3} info)" -f $elapsed, $script:MonitorAlertCounts.FAIL, $script:MonitorAlertCounts.WARN, $script:MonitorAlertCounts.INFO) -LogFile $logFile -Level INFO
