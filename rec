@@ -4467,7 +4467,11 @@ try {
 finally {
     Clear-MonitorStatusLine
 
+    if ($monitoringStart -is [datetime]) {
     $elapsed = (Get-Date) - $monitoringStart
+} else {
+    $elapsed = [timespan]::Zero
+}
 
     Write-MonitorAlert `
         -Message ("RoR monitor stopped after {0:hh\:mm\:ss} ({1} fail, {2} warn, {3} info)" -f `
